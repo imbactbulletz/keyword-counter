@@ -16,4 +16,9 @@ public class Main {
         CLIThread = new CLI();
         CLIThread.start();
     }
+
+    public static void stop() {
+        CLIThread.interrupt();
+        System.exit(0);
+    }
 }

@@ -1,17 +1,18 @@
 import java.util.Scanner;
 
+/**
+ * Thread which scans user input from the command line and then calls other components accordingly.
+ */
 public class CLI extends Thread {
 
     private Scanner scanner;
 
     @Override
     public void run() {
-        scanner = new Scanner(System.in);
-
-        String input;
-
         System.out.println("> CLI initiated");
 
+        scanner = new Scanner(System.in);
+        String input;
         while(scanner.hasNext()) {
 
             input = scanner.nextLine();
@@ -55,10 +56,15 @@ public class CLI extends Thread {
                     break;
                 case "stop":
                     System.out.println("You've issued command to shutdown the system.");
-                    System.err.println("Not yet implemented.");
+                    Main.stop();
                     break;
             }
 
+        }
+
+        if(Thread.currentThread().isInterrupted()) {
+            System.out.println("> CLI stopped");
+            this.stop();
         }
 
     }
