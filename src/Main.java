@@ -1,6 +1,12 @@
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.*;
+
 public class Main {
 
     public static CLI CLIThread;
+
+    public static DirectoryCrawler directoryCrawlerThread;
 
     public static void main(String[] args) {
         initialize();
@@ -15,6 +21,9 @@ public class Main {
     private static void initializeComponents() {
         CLIThread = new CLI();
         CLIThread.start();
+
+        directoryCrawlerThread = new DirectoryCrawler();
+        directoryCrawlerThread.start();
     }
 
     public static void stop() {

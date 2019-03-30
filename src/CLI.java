@@ -29,7 +29,7 @@ public class CLI extends Thread {
                 case "ad":
                     System.out.println("You've issued command to add a directory.");
                     System.out.println("Parameter passed: " + parameter);
-                    System.err.println("Not yet implemented.");
+                    Main.directoryCrawlerThread.addDirectory(parameter);
                     break;
                 case "aw":
                     System.out.println("You've issued command to add a web domain.");
@@ -56,15 +56,10 @@ public class CLI extends Thread {
                     break;
                 case "stop":
                     System.out.println("You've issued command to shutdown the system.");
-                    Main.stop();
-                    break;
+                    Main.directoryCrawlerThread.addDirectory(Messages.POSION_MESSAGE);
+                    return;
             }
 
-        }
-
-        if(Thread.currentThread().isInterrupted()) {
-            System.out.println("> CLI stopped");
-            this.stop();
         }
 
     }
