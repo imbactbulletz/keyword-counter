@@ -1,5 +1,5 @@
-import java.util.Collection;
-import java.util.List;
+import job.Job;
+
 import java.util.concurrent.*;
 
 public class Main {
@@ -7,6 +7,10 @@ public class Main {
     public static CLI CLIThread;
 
     public static DirectoryCrawler directoryCrawlerThread;
+
+    public static BlockingQueue<Job> jobQueue;
+
+    public static JobDispatcher jobDispatcherThread;
 
     public static void main(String[] args) {
         initialize();
@@ -19,15 +23,18 @@ public class Main {
     }
 
     private static void initializeComponents() {
+
         CLIThread = new CLI();
         CLIThread.start();
 
         directoryCrawlerThread = new DirectoryCrawler();
         directoryCrawlerThread.start();
+
+        jobQueue = new LinkedBlockingQueue<>();
+
+        jobDispatcherThread = new JobDispatcher();
+        jobDispatcherThread.start();
+
     }
 
-    public static void stop() {
-        CLIThread.interrupt();
-        System.exit(0);
-    }
 }

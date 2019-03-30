@@ -1,3 +1,6 @@
+import job.FileJob;
+import job.Job;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +35,9 @@ public class DirectoryCrawler extends Thread {
             for (String directoryPath : directoryPathsForScanning) {
                 // got poisoned
                 if (directoryPath.equals(Messages.POSION_MESSAGE)) {
+                    // poisons job dispatcher
+                    Main.jobQueue.add(new FileJob(Messages.POSION_MESSAGE));
+
                     System.out.println("> Directory Crawler shutting down.");
                     return;
                 }
@@ -51,11 +57,9 @@ public class DirectoryCrawler extends Thread {
 
                     // last modified attribute has changed for a corpus
                     if(!sameLastModifiedValues(map, oldMap)) {
-                        System.out.println("Found new value, putting it in the map.");
                         cache.put(foundCorpus.getPath(), map);
-                        //TODO Create a Job.
-                    } else {
-                        System.out.println("Last Modified values are the same. Continuing..");
+
+                        Main.jobQueue.add(new FileJob(foundCorpus.getName()));
                     }
 
                 }
@@ -146,5 +150,9 @@ public class DirectoryCrawler extends Thread {
         }
 
         return true;
+    }
+
+    public Map<String, Map<String, Long>> getCache() {
+        return cache;
     }
 }

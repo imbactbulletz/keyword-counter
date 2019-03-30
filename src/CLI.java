@@ -27,8 +27,6 @@ public class CLI extends Thread {
 
             switch (command) {
                 case "ad":
-                    System.out.println("You've issued command to add a directory.");
-                    System.out.println("Parameter passed: " + parameter);
                     Main.directoryCrawlerThread.addDirectory(parameter);
                     break;
                 case "aw":
@@ -55,7 +53,7 @@ public class CLI extends Thread {
                     System.err.println("Not yet implemented.");
                     break;
                 case "stop":
-                    System.out.println("You've issued command to shutdown the system.");
+                    System.out.println("Stopping components..");
                     Main.directoryCrawlerThread.addDirectory(Messages.POSION_MESSAGE);
                     return;
             }
