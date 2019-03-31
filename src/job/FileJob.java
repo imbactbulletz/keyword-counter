@@ -1,13 +1,13 @@
 package job;
 
 import java.util.Map;
+import java.util.concurrent.Future;
 
 public class FileJob implements Job {
 
     private ScanType type = ScanType.FILE;
     private String query;
-
-    private Map<String, Integer> resultMap;
+    private Future<Map> resultMap;
 
     public FileJob(String query) {
         this.query = query;
@@ -24,8 +24,13 @@ public class FileJob implements Job {
     }
 
     @Override
-    public Map<String, Integer> getResult() {
+    public Future<Map> getResult() {
         return resultMap;
+    }
+
+    @Override
+    public void setResult(Future<Map> resultMap) {
+        this.resultMap = resultMap;
     }
 
 }

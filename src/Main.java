@@ -12,6 +12,8 @@ public class Main {
 
     public static JobDispatcher jobDispatcherThread;
 
+    public static ForkJoinPool fileScannerPool;
+
     public static void main(String[] args) {
         initialize();
     }
@@ -35,6 +37,7 @@ public class Main {
         jobDispatcherThread = new JobDispatcher();
         jobDispatcherThread.start();
 
+        fileScannerPool = new ForkJoinPool();
     }
 
 }

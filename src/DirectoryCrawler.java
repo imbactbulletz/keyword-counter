@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 public class DirectoryCrawler extends Thread {
     private Queue<String> directoryPathsForScanning;
     private List<String> scannedDirectoryPaths;
-    private Map <String, Map<String, Long>> cache;
+    private Map <String, Map<File, Long>> cache;
 
     @Override
     public void run() {
@@ -57,9 +58,9 @@ public class DirectoryCrawler extends Thread {
 
                     // last modified attribute has changed for a corpus
                     if(!sameLastModifiedValues(map, oldMap)) {
-                        cache.put(foundCorpus.getPath(), map);
+                        cache.put(foundCorpus.getName(), map);
 
-                        Main.jobQueue.add(new FileJob(foundCorpus.getName()));
+                        Main.jobQueue.add(new FileJob("file|" + foundCorpus.getName()));
                     }
 
                 }
@@ -109,13 +110,13 @@ public class DirectoryCrawler extends Thread {
         }
     }
 
-    private Map<String, Long> getLastModifiedFiles(File corpus) {
-        Map<String, Long> lastModifiedFilesMap;
+    private Map<File, Long> getLastModifiedFiles(File corpus) {
+        Map<File, Long> lastModifiedFilesMap;
         try {
             lastModifiedFilesMap = Files.walk(corpus.toPath())
                     .filter(Files::isRegularFile)
                     .map(path -> path.toFile())
-                    .collect(Collectors.toMap(File::getName, File::lastModified));
+                    .collect(Collectors.toMap(Function.identity(), File::lastModified));
 
             return lastModifiedFilesMap;
 
@@ -152,7 +153,7 @@ public class DirectoryCrawler extends Thread {
         return true;
     }
 
-    public Map<String, Map<String, Long>> getCache() {
+    public Map<String, Map<File, Long>> getCache() {
         return cache;
     }
 }
