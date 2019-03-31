@@ -15,49 +15,39 @@ public class RecursiveFileScannerTask extends RecursiveTask<Map> {
 
     @Override
     protected Map compute() {
+        Map<String, Integer> resultMap = new HashMap<>();
 
-        List<File> takenFiles = takeFiles();
+        if(size(files) <= ApplicationSettings.fileScanningSizeLimit) {
+            return scanFilesForKeywords(files);
+        } else {
+            int listSize = files.size();
+            int mid = listSize / 2;
 
-        if (files.size() > 0) {
-            RecursiveFileScannerTask leftTask = new RecursiveFileScannerTask(files);
+            RecursiveFileScannerTask leftTask = new RecursiveFileScannerTask(files.subList(0, mid));
             leftTask.fork();
 
-            RecursiveFileScannerTask rightTask = new RecursiveFileScannerTask(takenFiles);
-            rightTask.compute();
+            RecursiveFileScannerTask rightTask = new RecursiveFileScannerTask(files.subList(mid, files.size()));
+
+            Map<String, Integer> rightResult = rightTask.compute();
+            Map<String, Integer> leftResult = leftTask.join();
+
+            resultMap.putAll(leftResult);
+            rightResult.forEach( (k, v) -> resultMap.merge(k, v, (v1, v2) -> v1 + v2));
         }
 
-        return scanFilesForKeywords(takenFiles);
+        return resultMap;
     }
 
-    private List<File> takeFiles() {
-        List<File> takenFiles = new ArrayList<>();
 
-        int takenFilesSize = 0;
-
-        for (File file : files) {
-            takenFilesSize += files.size();
-
-            if (takenFilesSize > ApplicationSettings.fileScanningSizeLimit) {
-                break;
-            }
-
-            takenFiles.add(file);
-        }
-
-        for (File takenFile : takenFiles) {
-            files.remove(takenFile);
-        }
-
-        return takenFiles;
-    }
 
     private Map<String, Integer> scanFilesForKeywords(List<File> files) {
         Map<String, Integer> resultMap = new HashMap<>();
 
-        for (File file : files) {
-            resultMap.forEach((fileName, keywordCount) ->
-                    scanFileForKeywords(file)
-                            .merge(fileName, keywordCount, (keyWordCount1, keywordCount2) -> keyWordCount1 + keywordCount2));
+
+        for(File file : files) {
+            Map<String, Integer> map = scanFileForKeywords(file);
+
+            map.forEach( (key, value) -> resultMap.merge(key, value ,(value1, value2) -> value1 + value2));
         }
 
         return resultMap;
@@ -74,17 +64,15 @@ public class RecursiveFileScannerTask extends RecursiveTask<Map> {
                 String line = bufferedReader.readLine();
 
                 List<String> words = Arrays.stream(line.split(" "))
-                        .map(word -> word.replaceAll("\\P{Alnum}", "")).collect(Collectors.toList());
+                        .map(word -> word.replaceAll("\\p{Punct}+$", "")).collect(Collectors.toList());
 
 
                 for (String word : words) {
                     if (keywordList.contains(word)) {
-                        int val = resultMap.get(word);
-
-                        if (val == 0) {
-                            resultMap.put(word, 1);
-                        } else {
+                        if(resultMap.containsKey(word)) {
                             resultMap.put(word, resultMap.get(word) + 1);
+                        } else {
+                            resultMap.put(word, 1);
                         }
                     }
                 }
@@ -96,5 +84,15 @@ public class RecursiveFileScannerTask extends RecursiveTask<Map> {
         }
 
         return resultMap;
+    }
+
+    private long size(List<File> files) {
+        long size = 0;
+
+        for(File file : files) {
+            size += file.length();
+        }
+
+        return size;
     }
 }

@@ -54,12 +54,13 @@ public class DirectoryCrawler extends Thread {
                     Map map = getLastModifiedFiles(foundCorpus);
 
 
-                    Map oldMap = cache.get(foundCorpus.getPath());
+                    Map oldMap = cache.get(foundCorpus.getName());
 
                     // last modified attribute has changed for a corpus
                     if(!sameLastModifiedValues(map, oldMap)) {
                         cache.put(foundCorpus.getName(), map);
 
+                        System.out.println("ERROR!");
                         Main.jobQueue.add(new FileJob("file|" + foundCorpus.getName()));
                     }
 
@@ -132,7 +133,7 @@ public class DirectoryCrawler extends Thread {
      * @param otherMap
      * @return
      */
-    private boolean sameLastModifiedValues(Map<String, Long> map, Map<String, Long> otherMap) {
+    private boolean sameLastModifiedValues(Map<File, Long> map, Map<File, Long> otherMap) {
         if(map == null || otherMap == null) {
             return false;
         }
@@ -141,9 +142,9 @@ public class DirectoryCrawler extends Thread {
             return false;
         }
 
-        for(String key: map.keySet()) {
-            long value = map.get(key);
-            long otherValue = otherMap.get(key);
+        for(File file: map.keySet()) {
+            long value = map.get(file);
+            long otherValue = otherMap.get(file);
 
             if(value != otherValue) {
                 return false;

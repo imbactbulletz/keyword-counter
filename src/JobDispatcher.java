@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,8 @@ public class JobDispatcher extends Thread {
                 // got poisoned
                 if(job.getQuery().equals(Messages.POSION_MESSAGE)) {
                     System.out.println("> Job Dispatcher shutting down.");
+                    Main.fileScannerPool.shutdown();
+
                     // todo poison file scanner and web scanner
                     return;
                 }
@@ -33,16 +36,20 @@ public class JobDispatcher extends Thread {
 
                     List<File> corpusFiles = cachedCorpusFiles.keySet().stream().collect(Collectors.toList());
 
+                    System.out.println("Recieved a Job. (" + job.getType() + "," + job.getQuery() + ")");
+
                     Future<Map> jobResult = Main.fileScannerPool.submit(new RecursiveFileScannerTask(corpusFiles));
-
-                    corpusFiles.stream().forEach((file) -> {
-                        System.out.println(file.getName());
-                    });
-
                     job.setResult(jobResult);
-                }
 
-                System.out.println("Recieved a Job. (" + job.getType() + "," + job.getQuery() + ")");
+                    try {
+                        Map j = jobResult.get();
+
+                        System.out.println(j);
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+
+                }
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
