@@ -1,4 +1,6 @@
-import job.FileJob;
+package file_scanner;
+
+import misc.ApplicationSettings;
 
 import java.io.*;
 import java.util.*;

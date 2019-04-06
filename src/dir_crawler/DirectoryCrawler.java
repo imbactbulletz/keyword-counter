@@ -1,5 +1,9 @@
+package dir_crawler;
+
+import app.Main;
 import job.FileJob;
-import job.Job;
+import misc.ApplicationSettings;
+import misc.Messages;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,10 +1,11 @@
+package result_retriever;
+
 import job.FileJob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 public class ResultRetriever extends Thread {
 

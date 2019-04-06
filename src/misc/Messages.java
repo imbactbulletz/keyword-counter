@@ -1,3 +1,5 @@
+package misc;
+
 /**
  * Contains common protocol messages.
  */

@@ -1,12 +1,15 @@
+package job_dispatcher;
+
+import app.Main;
+import file_scanner.RecursiveFileScannerTask;
 import job.FileJob;
 import job.Job;
 import job.ScanType;
+import misc.Messages;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
