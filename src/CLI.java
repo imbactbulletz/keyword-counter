@@ -1,3 +1,4 @@
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -35,22 +36,19 @@ public class CLI extends Thread {
                     System.err.println("Not yet implemented.");
                     break;
                 case "get":
-                    System.out.println("You've issued command to get result from the retriever.");
-                    System.out.println("Parameter passed: " + parameter);
-                    System.err.println("Not yet implemented.");
+                    String getResult = Main.resultRetriever.getResult(parameter);
+                    System.out.println(getResult);
                     break;
                 case "query":
-                    System.out.println("You've issued command to create a query.");
-                    System.out.println("Parameter passed: " + parameter);
-                    System.err.println("Not yet implemented.");
+                    String queryResult = Main.resultRetriever.queryResult(parameter);
+                    System.out.println(queryResult);
                     break;
                 case "cws":
                     System.out.println("You've issued command to clear web summary.");
                     System.err.println("Not yet implemented.");
                     break;
                 case "cfs":
-                    System.out.println("You've issued command to clear file summary.");
-                    System.err.println("Not yet implemented.");
+                    Main.resultRetriever.clearFileSummary();
                     break;
                 case "stop":
                     System.out.println("Stopping components..");

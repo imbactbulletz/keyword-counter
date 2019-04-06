@@ -23,9 +23,9 @@ public class JobDispatcher extends Thread {
                 // got poisoned
                 if(job.getQuery().equals(Messages.POSION_MESSAGE)) {
                     System.out.println("> Job Dispatcher shutting down.");
+                    System.out.println("> File Scanner shutting down.");
                     Main.fileScannerPool.shutdown();
 
-                    // todo poison file scanner and web scanner
                     return;
                 }
 
@@ -36,19 +36,11 @@ public class JobDispatcher extends Thread {
 
                     List<File> corpusFiles = cachedCorpusFiles.keySet().stream().collect(Collectors.toList());
 
-                    System.out.println("Recieved a Job. (" + job.getType() + "," + job.getQuery() + ")");
+//                    System.out.println("Job Dispatcher took a File Job (" + job.getType() + ", " + job.getQuery() + ")");
 
                     Future<Map> jobResult = Main.fileScannerPool.submit(new RecursiveFileScannerTask(corpusFiles));
                     job.setResult(jobResult);
-
-                    try {
-                        Map j = jobResult.get();
-
-                        System.out.println(j);
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    }
-
+                    Main.resultRetriever.addFileJob((FileJob)job);
                 }
 
             } catch (InterruptedException e) {

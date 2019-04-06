@@ -14,6 +14,8 @@ public class Main {
 
     public static ForkJoinPool fileScannerPool;
 
+    public static ResultRetriever resultRetriever;
+
     public static void main(String[] args) {
         initialize();
     }
@@ -27,6 +29,7 @@ public class Main {
     private static void initializeComponents() {
 
         CLIThread = new CLI();
+        CLIThread.setName("CLI Thread");
         CLIThread.start();
 
         directoryCrawlerThread = new DirectoryCrawler();
@@ -38,6 +41,9 @@ public class Main {
         jobDispatcherThread.start();
 
         fileScannerPool = new ForkJoinPool();
+
+        resultRetriever = new ResultRetriever();
+        resultRetriever.start();
     }
 
 }

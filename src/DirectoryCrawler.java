@@ -59,8 +59,6 @@ public class DirectoryCrawler extends Thread {
                     // last modified attribute has changed for a corpus
                     if(!sameLastModifiedValues(map, oldMap)) {
                         cache.put(foundCorpus.getName(), map);
-
-                        System.out.println("ERROR!");
                         Main.jobQueue.add(new FileJob("file|" + foundCorpus.getName()));
                     }
 
@@ -70,14 +68,14 @@ public class DirectoryCrawler extends Thread {
             // finished scanning, goes to sleep
             if (directoryPathsForScanning.size() == 0) {
                 try {
-                    System.out.println("> Directory Crawler is going to sleep.");
+//                    System.out.println("> Directory Crawler is going to sleep.");
 
                     Thread.sleep(ApplicationSettings.directoryCrawlerSleepTime);
                     // adds all of the previously scanned corpuses to be rescanned
                     directoryPathsForScanning.addAll(scannedDirectoryPaths);
                     scannedDirectoryPaths.clear();
 
-                    System.out.println("> Directory Crawler came back from sleep.");
+//                    System.out.println("> Directory Crawler came back from sleep.");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
