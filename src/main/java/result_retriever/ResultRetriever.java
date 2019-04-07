@@ -19,7 +19,7 @@ public class ResultRetriever extends Thread {
     }
 
     public void addFileJob(FileJob job) {
-        System.out.println("Result Retriever has recieved a File Job with query: " + job.getQuery());
+//        System.out.println("Result Retriever has recieved a File Job with query: " + job.getQuery());
 
         String jobQuery = job.getQuery();
         String corpusName = jobQuery.substring("file|".length());
