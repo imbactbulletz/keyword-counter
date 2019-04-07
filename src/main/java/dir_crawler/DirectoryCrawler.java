@@ -63,7 +63,7 @@ public class DirectoryCrawler extends Thread {
                     // last modified attribute has changed for a corpus
                     if(!sameLastModifiedValues(map, oldMap)) {
                         cache.put(foundCorpus.getName(), map);
-                        Main.jobQueue.add(new FileJob("file|" + foundCorpus.getName()));
+                        Main.jobQueue.add(new FileJob(foundCorpus.getName()));
                     }
 
                 }

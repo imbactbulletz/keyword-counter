@@ -3,19 +3,21 @@ package job;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-public class FileJob implements Job {
+public class WebJob implements Job {
 
-    private ScanType type = ScanType.FILE;
+    private ScanType scanType = ScanType.WEB;
     private String query;
     private Future<Map> resultMap;
+    private long hops;
 
-    public FileJob(String corpusName) {
-        this.query = "file|" + corpusName;
+    public WebJob(String pageURL, long hops) {
+        this.query = "web|" + pageURL;
+        this.hops = hops;
     }
 
     @Override
     public ScanType getType() {
-        return type;
+        return scanType;
     }
 
     @Override
@@ -31,6 +33,10 @@ public class FileJob implements Job {
     @Override
     public void setResult(Future<Map> resultMap) {
         this.resultMap = resultMap;
+    }
+
+    public long getHops() {
+        return hops;
     }
 
 }

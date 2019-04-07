@@ -6,6 +6,7 @@ import job.Job;
 import job_dispatcher.JobDispatcher;
 import misc.ApplicationSettings;
 import result_retriever.ResultRetriever;
+import web_scanner.WebScanner;
 
 import java.util.concurrent.*;
 
@@ -22,6 +23,8 @@ public class Main {
     public static ForkJoinPool fileScannerPool;
 
     public static ResultRetriever resultRetriever;
+
+    public static WebScanner webScannerPool;
 
     public static void main(String[] args) {
         initialize();
@@ -51,6 +54,8 @@ public class Main {
 
         resultRetriever = new ResultRetriever();
         resultRetriever.start();
+
+        webScannerPool = new WebScanner();
     }
 
 }

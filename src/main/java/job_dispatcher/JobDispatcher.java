@@ -5,13 +5,14 @@ import file_scanner.RecursiveFileScannerTask;
 import job.FileJob;
 import job.Job;
 import job.ScanType;
+import job.WebJob;
 import misc.Messages;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 public class JobDispatcher extends Thread {
 
@@ -37,13 +38,19 @@ public class JobDispatcher extends Thread {
 
                     Map<File, Long> cachedCorpusFiles = Main.directoryCrawlerThread.getCache().get(corpus);
 
-                    List<File> corpusFiles = cachedCorpusFiles.keySet().stream().collect(Collectors.toList());
+                    List<File> corpusFiles = new ArrayList<>(cachedCorpusFiles.keySet());
 
 //                    System.out.println("Job Dispatcher took a File Job (" + job.getType() + ", " + job.getQuery() + ")");
 
                     Future<Map> jobResult = Main.fileScannerPool.submit(new RecursiveFileScannerTask(corpusFiles));
                     job.setResult(jobResult);
-                    Main.resultRetriever.addFileJob((FileJob)job);
+                    Main.resultRetriever.addJob(job);
+                }
+
+
+                if(job.getType() == ScanType.WEB) {
+//                    System.out.println("Job Dispatcher: Scheduling job with query " + job.getQuery() +" to Web Scanner");
+                    Main.webScannerPool.addJob((WebJob)job);
                 }
 
             } catch (InterruptedException e) {

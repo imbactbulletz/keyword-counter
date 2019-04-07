@@ -1,6 +1,8 @@
 package cli;
 
 import app.Main;
+import job.WebJob;
+import misc.ApplicationSettings;
 import misc.Messages;
 
 import java.util.Scanner;
@@ -35,9 +37,7 @@ public class CLI extends Thread {
                     Main.directoryCrawlerThread.addDirectory(parameter);
                     break;
                 case "aw":
-                    System.out.println("You've issued command to add a web domain.");
-                    System.out.println("Parameter passed: " + parameter);
-                    System.err.println("Not yet implemented.");
+                    Main.jobQueue.add(new WebJob(parameter, ApplicationSettings.hopCount));
                     break;
                 case "get":
                     String getResult = Main.resultRetriever.getResult(parameter);
