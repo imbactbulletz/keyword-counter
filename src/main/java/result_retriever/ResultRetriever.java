@@ -45,14 +45,14 @@ public class ResultRetriever extends Thread {
         String[] splitQuery = query.split("\\|");
 
         String scanType = splitQuery[0];
-        String name = splitQuery[1];
+        String param = splitQuery[1];
 
         if(scanType.equals("file")) {
-                return getFileResult(name);
+                return getFileResult(param);
         }
 
         if(scanType.equals("web")) {
-                return getWebResult(name);
+                return getWebResult(param);
         }
 
         return "No such job type exists.";
@@ -162,9 +162,10 @@ public class ResultRetriever extends Thread {
     }
 
 
-    private String queryWeb(String pageURL) {
+    private String queryWeb(String domainName) {
 
-        if(pageURL.equals("summary")) {
+        // if user called for summary
+        if(domainName.equals("summary")) {
             List<Future> summaryFutures = new ArrayList<>(webJobsSummaryCache.values());
 
             for(Future summaryFuture : summaryFutures) {
@@ -186,19 +187,23 @@ public class ResultRetriever extends Thread {
             return summaryMap.toString();
         }
 
-        Future<Map> webFuture = webJobsFutures.get(pageURL);
+        
+        // if user called for a specific domain
+        Future domainFuture = webJobsSummaryCache.get(domainName);
 
-        if(webFuture != null) {
-            if(webFuture.isDone()) {
+        // try to get domain result, if it exists
+        if(domainFuture != null) {
+            if(domainFuture.isDone()) {
                 try {
-                    String result = webFuture.get().toString();
-                    startDomainSummary(pageURL);
+                    return domainFuture.get().toString();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-            } else {
-                return "Job isn't finished yet.";
             }
+        } else {
+            domainFuture = executorService.submit(new DomainSummaryWorker(domainName, webJobsFutures));
+            webJobsSummaryCache.put(domainName, domainFuture);
+            return "Summary is not ready yet.";
         }
 
         return "No job under such query exists";
@@ -220,50 +225,8 @@ public class ResultRetriever extends Thread {
     }
 
 
-    private void startDomainSummary(String pageURL) {
-        String domainName = convertPageURLtoDomain(pageURL);
-        Future domainResult = executorService.submit(new DomainSummaryWorker(domainName, webJobsFutures));
-
-        webJobsSummaryCache.put(domainName, domainResult);
-    }
-
     public void clearFileSummary() {
         fileJobsSummaryCache = new ConcurrentHashMap<>();
         System.out.println("> Cleared File Summary.");
-    }
-
-
-
-    public String convertPageURLtoDomain(String pageURL) {
-        if (pageURL.startsWith("http:/")) {
-            if (!pageURL.contains("http://")) {
-                pageURL = pageURL.replaceAll("http:/", "http://");
-            }
-        } else {
-            if (pageURL.startsWith("https:/")) {
-                if (!pageURL.contains("https://")) {
-                    pageURL = pageURL.replaceAll("https:/", "https://");
-                }
-            } else {
-                pageURL = "http://" + pageURL;
-            }
-        }
-
-        URI uri = null;
-        try {
-            uri = new URI(pageURL);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        String domain = uri.getHost();
-        return domain.startsWith("www.") ? domain.substring(4) : domain;
-    }
-
-    public Map<String, Future<Map>> getWebJobsSummaryCache() {
-        return webJobsSummaryCache;
-    }
-
-    public Map<String, Future<Map>> getFileJobsSummaryCache() {
-        return fileJobsSummaryCache;
     }
 }
