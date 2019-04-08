@@ -36,9 +36,14 @@ public class DomainSummaryWorker implements Callable<Map<String, Integer>> {
             try {
                 Map<String, Integer> pageResult = pageFuture.get();
 
+                if(pageResult == null) {
+                    continue;
+                }
+
                 pageResult.forEach( (key, value) -> domainSummarizedMap.merge(key, value ,(value1, value2) -> value1 + value2));
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
+
             }
         }
 

@@ -24,14 +24,15 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
 
     @Override
     public Map<String, Integer> call() {
-        String pageURL = webJob.getQuery().substring("web|".length());
+        String pageURL = webJob.getQuery();
         Document document = null;
 
 
         try {
             document = Jsoup.connect(pageURL).get();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Could not connect to : " + pageURL);
+            return null;
         }
 
         List<String> foundLinks = getLinksFrom(document);
@@ -47,7 +48,7 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
             @Override
             public void run() {
                 Main.webScannerPool.getScannedJobs().remove(webJob);
-                System.out.println("Removed job from the scanned list queue! New size: " + Main.webScannerPool.getScannedJobs().size());
+//                System.out.println("Scheduler has removed job from the scanned list queue! New size: " + Main.webScannerPool.getScannedJobs().size());
             }
         }, ApplicationSettings.URLRefreshTime, TimeUnit.MILLISECONDS);
 

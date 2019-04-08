@@ -53,7 +53,6 @@ public class Main {
         fileScannerPool = new ForkJoinPool();
 
         resultRetriever = new ResultRetriever();
-        resultRetriever.start();
 
         webScannerPool = new WebScanner();
     }

@@ -80,9 +80,9 @@ public class RecursiveFileScannerTask extends RecursiveTask<Map> {
                 }
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            System.out.println("Could not read file with name: " + file.getName());
+            return new HashMap<>();
         }
 
         return resultMap;

@@ -11,7 +11,7 @@ public class WebJob implements Job {
     private long hops;
 
     public WebJob(String pageURL, long hops) {
-        this.query = "web|" + pageURL;
+        this.query = pageURL;
         this.hops = hops;
     }
 

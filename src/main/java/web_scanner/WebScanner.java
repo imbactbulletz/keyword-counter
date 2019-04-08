@@ -37,11 +37,11 @@ public class WebScanner {
 
         for (WebJob scannedJob : scannedJobs) {
             if (scannedJob.getQuery().equals(job.getQuery())) {
-                System.out.println("Found duplicate. (" + job.getQuery() + ")");
+//                System.out.println("Found duplicate. (" + job.getQuery() + ")");
                 return true;
             }
         }
-        System.out.println(scannedJobs.size());
+
         return false;
     }
 

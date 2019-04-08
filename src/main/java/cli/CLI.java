@@ -34,22 +34,41 @@ public class CLI extends Thread {
 
             switch (command) {
                 case "ad":
+                    if(parameter == null ) {
+                        System.out.println("A parameter was expected but wasn't passed.");
+                        break;
+                    }
+
                     Main.directoryCrawlerThread.addDirectory(parameter);
                     break;
                 case "aw":
+                    if(parameter == null ) {
+                        System.out.println("A parameter was expected but wasn't passed.");
+                        break;
+                    }
+
                     Main.jobQueue.add(new WebJob(parameter, ApplicationSettings.hopCount));
                     break;
                 case "get":
+                    if(parameter == null ) {
+                        System.out.println("A parameter was expected but wasn't passed.");
+                        break;
+                    }
+
                     String getResult = Main.resultRetriever.getResult(parameter);
                     System.out.println(getResult);
                     break;
                 case "query":
+                    if(parameter == null ) {
+                        System.out.println("A parameter was expected but wasn't passed.");
+                        break;
+                    }
+
                     String queryResult = Main.resultRetriever.queryResult(parameter);
                     System.out.println(queryResult);
                     break;
                 case "cws":
-                    System.out.println("You've issued command to clear web summary.");
-                    System.err.println("Not yet implemented.");
+                    Main.resultRetriever.clearWebSummary();
                     break;
                 case "cfs":
                     Main.resultRetriever.clearFileSummary();
@@ -58,6 +77,8 @@ public class CLI extends Thread {
                     System.out.println("Stopping components..");
                     Main.directoryCrawlerThread.addDirectory(Messages.POSION_MESSAGE);
                     return;
+                default:
+                    System.err.println("You have issued an inexistent command.");
             }
 
         }

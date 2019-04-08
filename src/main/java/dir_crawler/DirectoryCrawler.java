@@ -50,25 +50,30 @@ public class DirectoryCrawler extends Thread {
 
                 //finds corpuses
                 List<File> foundCorpuses = findCorpuses(directoryPath);
-                directoryPathsForScanning.remove(directoryPath);
-                scannedDirectoryPaths.add(directoryPath);
 
-                // gets last modified dates for each corpus' files
-                for (File foundCorpus : foundCorpuses) {
-                    Map map = getLastModifiedFiles(foundCorpus);
+                if (foundCorpuses != null) {
+
+                    directoryPathsForScanning.remove(directoryPath);
+                    scannedDirectoryPaths.add(directoryPath);
+
+                    // gets last modified dates for each corpus' files
+                    for (File foundCorpus : foundCorpuses) {
+                        Map map = getLastModifiedFiles(foundCorpus);
 
 
-                    Map oldMap = cache.get(foundCorpus.getName());
+                        Map oldMap = cache.get(foundCorpus.getName());
 
-                    // last modified attribute has changed for a corpus
-                    if(!sameLastModifiedValues(map, oldMap)) {
-                        cache.put(foundCorpus.getName(), map);
-                        Main.jobQueue.add(new FileJob(foundCorpus.getName()));
+                        // last modified attribute has changed for a corpus
+                        if (!sameLastModifiedValues(map, oldMap)) {
+                            cache.put(foundCorpus.getName(), map);
+                            Main.jobQueue.add(new FileJob(foundCorpus.getName()));
+                        }
+
                     }
-
+                } else {
+                    directoryPathsForScanning.remove(directoryPath);
                 }
             }
-
             // finished scanning, goes to sleep
             if (directoryPathsForScanning.size() == 0) {
                 try {
@@ -108,7 +113,7 @@ public class DirectoryCrawler extends Thread {
 
             return corpusesList;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("No such directory exists.");
             return null;
         }
     }
@@ -124,7 +129,7 @@ public class DirectoryCrawler extends Thread {
             return lastModifiedFilesMap;
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Could not read files.");
             return null;
         }
     }

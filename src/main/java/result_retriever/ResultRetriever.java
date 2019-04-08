@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class ResultRetriever extends Thread {
+public class ResultRetriever {
 
 
     private Map<String, Future<Map>> fileJobsSummaryCache = new ConcurrentHashMap<>();
@@ -20,10 +20,6 @@ public class ResultRetriever extends Thread {
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
-    @Override
-    public void run() {
-        System.out.println("> Result Retriever is up and running.");
-    }
 
     public void addJob(Job job) {
 //        System.out.println("Result Retriever has recieved a File Job with query: " + job.getQuery());
@@ -32,10 +28,9 @@ public class ResultRetriever extends Thread {
 
 
         if(job.getType() == ScanType.FILE) {
-            String corpusName = jobQuery.substring("file|".length());
-            fileJobsSummaryCache.put(corpusName, job.getResult());
+            fileJobsSummaryCache.put(jobQuery, job.getResult());
         } else {
-            String pageURL = jobQuery.substring("web|".length());
+            String pageURL = jobQuery;
             webJobsFutures.put(pageURL, job.getResult());
         }
     }
@@ -43,6 +38,10 @@ public class ResultRetriever extends Thread {
 
     public String getResult(String query) {
         String[] splitQuery = query.split("\\|");
+
+        if(splitQuery.length < 2) {
+            return "Type not specified.";
+        }
 
         String scanType = splitQuery[0];
         String param = splitQuery[1];
@@ -60,6 +59,10 @@ public class ResultRetriever extends Thread {
 
     public String queryResult(String query) {
         String[] splitQuery = query.split("\\|");
+
+        if(splitQuery.length < 2) {
+            return "Type not specified.";
+        }
 
         String scanType = splitQuery[0];
         String name = splitQuery[1];
@@ -207,6 +210,11 @@ public class ResultRetriever extends Thread {
     }
 
     private String getWebResult(String domainName) {
+
+        if(domainName.equals("summary")){
+            return getWebSummary();
+        }
+
         Future webFuture = webJobsFutures.get(domainName);
 
         if(webFuture != null) {
@@ -214,14 +222,6 @@ public class ResultRetriever extends Thread {
             try {
                 return webFuture.get().toString();
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                webFuture = executorService.submit(new DomainSummaryWorker(domainName, webJobsFutures));
-                webJobsSummaryCache.put(domainName, webFuture);
-                return webFuture.get().toString();
-            } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -232,29 +232,26 @@ public class ResultRetriever extends Thread {
     private String getWebSummary() {
         List<Future<Map>> summaryFutures = new ArrayList<>(webJobsSummaryCache.values());
 
-        for(Future summaryFuture : summaryFutures) {
-            if(summaryFuture.isDone()) {
-                continue;
-            } else {
+        for (Future summaryFuture : summaryFutures) {
+            if (!summaryFuture.isDone()) {
                 try {
                     summaryFuture.get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
             }
         }
-
-        String webSummaryCache = getWebSummaryCache();
-
-        return webSummaryCache;
+        return getWebSummaryCache();
     }
-
 
     public void clearFileSummary() {
         fileJobsSummaryCache = new ConcurrentHashMap<>();
         System.out.println("> Cleared File Summary.");
+    }
+
+    public void clearWebSummary() {
+        webJobsSummaryCache = new ConcurrentHashMap<>();
+        System.out.println("> Cleared Web Summary");
     }
 
     private String getWebSummaryCache() {
