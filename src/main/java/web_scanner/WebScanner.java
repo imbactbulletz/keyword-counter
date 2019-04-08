@@ -12,10 +12,11 @@ import java.util.concurrent.*;
 public class WebScanner {
     private List<WebJob> scannedJobs;
     private ExecutorService executorService;
-
+    private ScheduledExecutorService scheduledExecutorService;
     public WebScanner() {
         this.scannedJobs = new CopyOnWriteArrayList<>();
         this.executorService = Executors.newCachedThreadPool();
+        scheduledExecutorService = Executors.newScheduledThreadPool(2);
     }
 
     public void addJob(WebJob job) {
@@ -42,5 +43,13 @@ public class WebScanner {
         }
         System.out.println(scannedJobs.size());
         return false;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
+    }
+
+    public List<WebJob> getScannedJobs() {
+        return scannedJobs;
     }
 }

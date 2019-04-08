@@ -11,6 +11,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class PageScannerWorker implements Callable<Map<String, Integer>> {
@@ -40,6 +41,15 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
         }
 
         Map<String, Integer> foundKeywords = scanForKeywords(document.body().text());
+
+        // remove job after delay
+        Main.webScannerPool.getScheduledExecutorService().schedule(new Runnable() {
+            @Override
+            public void run() {
+                Main.webScannerPool.getScannedJobs().remove(webJob);
+                System.out.println("Removed job from the scanned list queue! New size: " + Main.webScannerPool.getScannedJobs().size());
+            }
+        }, ApplicationSettings.URLRefreshTime, TimeUnit.MILLISECONDS);
 
         return foundKeywords;
     }
