@@ -268,4 +268,8 @@ public class ResultRetriever {
 
         return summaryMap.toString();
     }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
 }

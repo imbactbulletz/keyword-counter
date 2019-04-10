@@ -11,6 +11,9 @@ public class WebJob implements Job {
     private long hops;
 
     public WebJob(String pageURL, long hops) {
+        if(pageURL.startsWith("web|")) {
+            pageURL = pageURL.substring("web|".length());
+        }
         this.query = pageURL;
         this.hops = hops;
     }

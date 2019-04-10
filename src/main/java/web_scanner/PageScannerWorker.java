@@ -32,7 +32,7 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
             document = Jsoup.connect(pageURL).get();
         } catch (Exception e) {
             System.out.println("Could not connect to : " + pageURL);
-            return null;
+            return new HashMap<>();
         }
 
         List<String> foundLinks = getLinksFrom(document);
@@ -41,7 +41,11 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
             scheduleNewWebJobs(foundLinks);
         }
 
-        Map<String, Integer> foundKeywords = scanForKeywords(document.body().text());
+        Map<String, Integer> foundKeywords = new HashMap<>();
+
+        if(document.body() != null) {
+           foundKeywords = scanForKeywords(document.body().text());
+        }
 
         // remove job after delay
         Main.webScannerPool.getScheduledExecutorService().schedule(new Runnable() {
@@ -61,7 +65,9 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
             Elements links = document.select("a[href]");
 
             for (Element link : links) {
-                foundLinks.add(link.attr("abs:href"));
+                if(link.attr("abs:href").startsWith("http")) {
+                    foundLinks.add(link.attr("abs:href"));
+                }
             }
 
 

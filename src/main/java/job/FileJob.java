@@ -10,7 +10,7 @@ public class FileJob implements Job {
     private Future<Map> resultMap;
 
     public FileJob(String corpusName) {
-        this.query = "file|" + corpusName;
+        this.query = corpusName;
     }
 
     @Override

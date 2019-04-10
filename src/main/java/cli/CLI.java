@@ -25,13 +25,14 @@ public class CLI extends Thread {
             input = scanner.nextLine();
 
             String[] splitInput = input.split(" ");
+
+
             String command = splitInput[0];
             String parameter = null;
 
             if(splitInput.length > 1) {
                 parameter = splitInput[1];
             }
-
             switch (command) {
                 case "ad":
                     if(parameter == null ) {

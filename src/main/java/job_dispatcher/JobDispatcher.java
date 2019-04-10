@@ -29,12 +29,15 @@ public class JobDispatcher extends Thread {
                     System.out.println("> Job Dispatcher shutting down.");
                     System.out.println("> File Scanner shutting down.");
                     Main.fileScannerPool.shutdown();
-
+                    System.out.println("> Web Scanner shutting down.");
+                    Main.webScannerPool.getScheduledExecutorService().shutdown();
+                    System.out.println("> Result Retriever shutting down.");
+                    Main.resultRetriever.getExecutorService().shutdown();
                     return;
                 }
 
                 if(job.getType() == ScanType.FILE) {
-                    String corpus = job.getQuery().substring("file|".length());
+                    String corpus = job.getQuery();
 
                     Map<File, Long> cachedCorpusFiles = Main.directoryCrawlerThread.getCache().get(corpus);
 

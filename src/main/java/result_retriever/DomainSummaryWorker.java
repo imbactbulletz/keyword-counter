@@ -51,27 +51,32 @@ public class DomainSummaryWorker implements Callable<Map<String, Integer>> {
     }
 
     public String convertPageURLtoDomain(String pageURL) {
-        if (pageURL.startsWith("http:/")) {
-            if (!pageURL.contains("http://")) {
-                pageURL = pageURL.replaceAll("http:/", "http://");
-            }
-        } else {
-            if (pageURL.startsWith("https:/")) {
-                if (!pageURL.contains("https://")) {
-                    pageURL = pageURL.replaceAll("https:/", "https://");
-                }
-            } else {
-                pageURL = "http://" + pageURL;
-            }
-        }
-
-        URI uri = null;
+        String domain = null;
         try {
-            uri = new URI(pageURL);
+            // get rid of spaces in parameters (i ran into one)
+            URI uri = new URI(pageURL.split(" ")[0]);
+
+            domain = new URI(uri.getScheme(),
+                    uri.getAuthority(),
+                    null,
+                    null, // Ignore the query part of the input url
+                    uri.getFragment()).toString();
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        String domain = uri.getHost();
-        return domain.startsWith("www.") ? domain.substring(4) : domain;
+
+        if(domain.startsWith("http://")) {
+            domain = domain.substring("http://".length());
+        }
+
+        if(domain.startsWith("https://")) {
+            domain = domain.substring("https://".length());
+        }
+
+        if(domain.startsWith("www.")) {
+            domain = domain.substring("www.".length());
+        }
+
+        return domain;
     }
 }
