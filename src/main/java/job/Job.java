@@ -9,7 +9,7 @@ public interface Job {
 
     String getQuery();
 
-    Future<Map> getResult();
+    Future<Map<String,Integer>> getResult();
 
-    void setResult(Future<Map> resultMap);
+    void setResult(Future<Map<String,Integer>> resultMap);
 }

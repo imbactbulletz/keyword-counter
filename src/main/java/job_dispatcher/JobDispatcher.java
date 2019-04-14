@@ -45,7 +45,7 @@ public class JobDispatcher extends Thread {
 
 //                    System.out.println("Job Dispatcher took a File Job (" + job.getType() + ", " + job.getQuery() + ")");
 
-                    Future<Map> jobResult = Main.fileScannerPool.submit(new RecursiveFileScannerTask(corpusFiles));
+                    Future<Map<String,Integer>> jobResult = Main.fileScannerPool.submit(new RecursiveFileScannerTask(corpusFiles));
                     job.setResult(jobResult);
                     Main.resultRetriever.addJob(job);
                 }

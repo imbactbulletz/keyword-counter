@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.RecursiveTask;
 import java.util.stream.Collectors;
 
-public class RecursiveFileScannerTask extends RecursiveTask<Map> {
+public class RecursiveFileScannerTask extends RecursiveTask<Map<String, Integer>> {
 
     private List<File> files;
 
@@ -16,28 +16,28 @@ public class RecursiveFileScannerTask extends RecursiveTask<Map> {
     }
 
     @Override
-    protected Map compute() {
-        Map<String, Integer> resultMap = new HashMap<>();
+    protected Map<String, Integer> compute() {
+        List<File> takenFiles = takeFiles(files);
+        Map<String,Integer> resultMap = new HashMap<>();
 
-        if(size(files) <= ApplicationSettings.fileScanningSizeLimit) {
-            return scanFilesForKeywords(files);
-        } else {
-            int listSize = files.size();
-            int mid = listSize / 2;
-
-            RecursiveFileScannerTask leftTask = new RecursiveFileScannerTask(files.subList(0, mid));
+        if(files.size() > 0) {
+            RecursiveFileScannerTask leftTask = new RecursiveFileScannerTask(files);
             leftTask.fork();
 
-            RecursiveFileScannerTask rightTask = new RecursiveFileScannerTask(files.subList(mid, files.size()));
+            RecursiveFileScannerTask rightTask = new RecursiveFileScannerTask(takenFiles);
 
-            Map<String, Integer> rightResult = rightTask.compute();
-            Map<String, Integer> leftResult = leftTask.join();
+            Map<String, Integer> rightTaskResult = rightTask.compute();
+            Map<String, Integer> leftTaskResult = leftTask.join();
 
-            resultMap.putAll(leftResult);
-            rightResult.forEach( (k, v) -> resultMap.merge(k, v, (v1, v2) -> v1 + v2));
+            resultMap.putAll(rightTaskResult);
+
+            leftTaskResult.forEach((k,v) -> resultMap.merge(k,v, (v1,v2) -> v1 + v2));
+
+            return resultMap;
+
+        } else {
+            return scanFilesForKeywords(takenFiles);
         }
-
-        return resultMap;
     }
 
 
@@ -97,4 +97,29 @@ public class RecursiveFileScannerTask extends RecursiveTask<Map> {
 
         return size;
     }
+
+    private List<File> takeFiles(List<File> fileList) {
+        List<File> takenFiles = new ArrayList<>();
+
+        int takenFilesSizeSum = 0;
+
+        // take as many files until it goes past the limit
+        for(File file: fileList) {
+            takenFilesSizeSum += file.length();
+
+            takenFiles.add(file);
+
+            if(takenFilesSizeSum > ApplicationSettings.fileScanningSizeLimit) {
+                break;
+            }
+        }
+
+        // remove taken files from the original list
+        for(File takenFile: takenFiles) {
+            fileList.remove(takenFile);
+        }
+
+        return takenFiles;
+    }
+
 }

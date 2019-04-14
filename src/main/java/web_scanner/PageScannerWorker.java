@@ -8,7 +8,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +24,8 @@ public class PageScannerWorker implements Callable<Map<String, Integer>> {
     @Override
     public Map<String, Integer> call() {
         String pageURL = webJob.getQuery();
+
+
         Document document = null;
 
 

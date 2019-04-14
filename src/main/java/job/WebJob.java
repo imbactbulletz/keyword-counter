@@ -7,13 +7,14 @@ public class WebJob implements Job {
 
     private ScanType scanType = ScanType.WEB;
     private String query;
-    private Future<Map> resultMap;
+    private Future<Map<String,Integer>> resultMap;
     private long hops;
 
     public WebJob(String pageURL, long hops) {
         if(pageURL.startsWith("web|")) {
             pageURL = pageURL.substring("web|".length());
         }
+
         this.query = pageURL;
         this.hops = hops;
     }
@@ -29,12 +30,12 @@ public class WebJob implements Job {
     }
 
     @Override
-    public Future<Map> getResult() {
+    public Future<Map<String,Integer>> getResult() {
         return resultMap;
     }
 
     @Override
-    public void setResult(Future<Map> resultMap) {
+    public void setResult(Future<Map<String,Integer>> resultMap) {
         this.resultMap = resultMap;
     }
 

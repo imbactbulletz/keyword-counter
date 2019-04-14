@@ -1,36 +1,39 @@
 package result_retriever;
 
-import job.FileJob;
 import job.Job;
 import job.ScanType;
-import job.WebJob;
+import misc.URIUtil;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 public class ResultRetriever {
 
+    private Future<String> fileSummaryJobs;
+    private Map<String, Future<Map<String, Integer>>> fileJobs = new ConcurrentHashMap<>();
 
-    private Map<String, Future<Map>> fileJobsSummaryCache = new ConcurrentHashMap<>();
-    private Map<String, Future<Map>> webJobsFutures = new ConcurrentHashMap<>();
-    private Map<String, Future<Map>> webJobsSummaryCache = new ConcurrentHashMap<>();
+    private Map<String, Future<Map<String, Integer>>> webJobsFutures = new ConcurrentHashMap<>();
+    private Map<String, Future<Map<String, Integer>>> domainSummaries = new ConcurrentHashMap<>();
+    private Future<Map<String, Map<String, Integer>>> webJobsSummaryCache;
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
 
     public void addJob(Job job) {
-//        System.out.println("Result Retriever has recieved a File Job with query: " + job.getQuery());
-
         String jobQuery = job.getQuery();
 
 
-        if(job.getType() == ScanType.FILE) {
-            fileJobsSummaryCache.put(jobQuery, job.getResult());
+        if (job.getType() == ScanType.FILE) {
+            fileJobs.put(jobQuery, job.getResult());
         } else {
             String pageURL = jobQuery;
+
+            String domainName = URIUtil.convertPageURLtoDomain(pageURL);
+
+            domainSummaries.remove(domainName);
+
             webJobsFutures.put(pageURL, job.getResult());
         }
     }
@@ -39,76 +42,70 @@ public class ResultRetriever {
     public String getResult(String query) {
         String[] splitQuery = query.split("\\|");
 
-        if(splitQuery.length < 2) {
+        if (splitQuery.length < 2) {
             return "Type not specified.";
         }
 
         String scanType = splitQuery[0];
         String param = splitQuery[1];
 
-        if(scanType.equals("file")) {
-                return getFileResult(param);
+        if (scanType.equals("file")) {
+            return getFileResult(param);
         }
 
-        if(scanType.equals("web")) {
-                return getWebResult(param);
+        if (scanType.equals("web")) {
+            return getWebResult(param);
         }
 
         return "No such job type exists.";
     }
 
+
     public String queryResult(String query) {
+
         String[] splitQuery = query.split("\\|");
 
-        if(splitQuery.length < 2) {
+        if (splitQuery.length < 2) {
             return "Type not specified.";
         }
 
         String scanType = splitQuery[0];
         String name = splitQuery[1];
 
-        if(scanType.equals("file")) {
+        if (scanType.equals("file")) {
             return queryFile(name);
         }
 
-        if(scanType.equals("web")) {
+        if (scanType.equals("web")) {
             return queryWeb(name);
         }
 
         return "No such job type exists.";
     }
 
+
     private String getFileResult(String name) {
 
-        if(name.equals("summary")) {
-            List<Future<Map>> jobFutures = new ArrayList<>(fileJobsSummaryCache.values());
-
-            for(Future jobFuture : jobFutures) {
-                if(!jobFuture.isDone()) {
-                    try {
-                        jobFuture.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            Map<String, Map<String, Integer>> summaryMap = new HashMap<>();
-
-            fileJobsSummaryCache.forEach((k,v) -> {
+        if (name.equals("summary")) {
+            if (fileSummaryJobs != null && fileSummaryJobs.isDone()) {
                 try {
-                    summaryMap.put(k, v.get());
+                    return fileSummaryJobs.get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-            });
-
-            return summaryMap.toString();
+            } else {
+                fileSummaryJobs = executorService.submit(new FileCorpusSummarizer());
+                try {
+                    return fileSummaryJobs.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
-        Future<Map> jobFuture = fileJobsSummaryCache.get(name);
+        Future<Map<String, Integer>> jobFuture = fileJobs.get(name);
 
-        if(jobFuture != null) {
+        if (jobFuture != null) {
             try {
                 return jobFuture.get().toString();
             } catch (InterruptedException | ExecutionException e) {
@@ -121,34 +118,28 @@ public class ResultRetriever {
         return "No job under such query exists.";
     }
 
+
     private String queryFile(String name) {
-        if(name.equals("summary")) {
-            List<Future<Map>> jobFutures = new ArrayList<>(fileJobsSummaryCache.values());
 
-            for(Future jobFuture : jobFutures) {
-                if(!jobFuture.isDone()) {
-                    return "File Summary is not ready yet.";
-                }
-            }
-
-            Map<String, Map<String, Integer>> summaryMap = new HashMap<>();
-
-            fileJobsSummaryCache.forEach((k,v) -> {
+        if (name.equals("summary")) {
+            if (fileSummaryJobs != null && fileSummaryJobs.isDone()) {
                 try {
-                    summaryMap.put(k, v.get());
+                    return fileSummaryJobs.get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-            });
+            } else {
+                fileSummaryJobs = executorService.submit(new FileCorpusSummarizer());
 
-            return summaryMap.toString();
+                return "Summary is not ready yet.";
+            }
         }
 
-        Future<Map> jobFuture = fileJobsSummaryCache.get(name);
+        Future<Map<String, Integer>> jobFuture = fileJobs.get(name);
 
-        if(jobFuture != null) {
+        if (jobFuture != null) {
 
-            if(jobFuture.isDone()) {
+            if (jobFuture.isDone()) {
                 try {
                     return jobFuture.get().toString();
                 } catch (InterruptedException | ExecutionException e) {
@@ -157,8 +148,6 @@ public class ResultRetriever {
             } else {
                 return "Job isn't finished yet.";
             }
-        } else {
-            return "No job under such query exists.";
         }
 
         return "No job under such query exists.";
@@ -168,108 +157,132 @@ public class ResultRetriever {
     private String queryWeb(String param) {
 
         // if user called for summary
-        if(param.equals("summary")) {
+        if (param.equals("summary")) {
             return queryWebSummary();
         } else {
             return queryWebDomainResult(param);
         }
     }
 
-    private String queryWebSummary() {
-        List<Future> summaryFutures = new ArrayList<>(webJobsSummaryCache.values());
-
-        for(Future summaryFuture : summaryFutures) {
-            if(!summaryFuture.isDone()) {
-                return "Summary has not finished yet.";
-            }
-        }
-
-        return getWebSummaryCache();
-    }
 
     private String queryWebDomainResult(String domainName) {
-        // if user called for a specific domain
-        Future domainFuture = webJobsSummaryCache.get(domainName);
 
-        // try to get domain result, if it exists
-        if(domainFuture != null) {
-            if(domainFuture.isDone()) {
+        Future<Map<String, Integer>> domainResultFuture = domainSummaries.get(domainName);
+
+        if (domainResultFuture != null) {
+            if (domainResultFuture.isDone()) {
                 try {
-                    return domainFuture.get().toString();
+                    return domainResultFuture.get().toString();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
+            } else {
+                return "Domain results are not ready yet.";
             }
         } else {
-            domainFuture = executorService.submit(new DomainSummaryWorker(domainName, webJobsFutures));
-            webJobsSummaryCache.put(domainName, domainFuture);
+            domainResultFuture = executorService
+                    .submit(new DomainSummarizer(domainName, webJobsFutures));
+
+            domainSummaries.put(domainName, domainResultFuture);
+
             return "Summary is not ready yet.";
         }
 
         return "No such job with that query exists.";
     }
 
+
     private String getWebResult(String domainName) {
-
-        if(domainName.equals("summary")){
+        if (domainName.equals("summary")) {
             return getWebSummary();
+        } else {
+            return getWebDomainResult(domainName);
         }
-
-        Future webFuture = webJobsFutures.get(domainName);
-
-        if(webFuture != null) {
-
-            try {
-                return webFuture.get().toString();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return "No job under such query exists";
     }
 
-    private String getWebSummary() {
-        List<Future<Map>> summaryFutures = new ArrayList<>(webJobsSummaryCache.values());
+    private String queryWebSummary() {
 
-        for (Future summaryFuture : summaryFutures) {
-            if (!summaryFuture.isDone()) {
+
+        if (webJobsSummaryCache != null) {
+            if (webJobsSummaryCache.isDone()) {
                 try {
-                    summaryFuture.get();
+                    return webJobsSummaryCache.get().toString();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
+            } else {
+                return "Summary is not ready yet.";
             }
         }
-        return getWebSummaryCache();
+        webJobsSummaryCache = executorService.submit(new WebCorpusSummarizer(webJobsFutures));
+        return "Summary is not ready yet.";
     }
 
-    public void clearFileSummary() {
-        fileJobsSummaryCache = new ConcurrentHashMap<>();
-        System.out.println("> Cleared File Summary.");
-    }
+    private String getWebDomainResult(String domainName) {
+        Future domainResult = domainSummaries.get(domainName);
 
-    public void clearWebSummary() {
-        webJobsSummaryCache = new ConcurrentHashMap<>();
-        System.out.println("> Cleared Web Summary");
-    }
-
-    private String getWebSummaryCache() {
-
-        Map<String, Map<String, Integer>> summaryMap = new HashMap<>();
-
-        webJobsSummaryCache.forEach((k,v) -> {
+        if (domainResult != null) {
             try {
-                summaryMap.put(k, v.get());
+                return domainResult.get().toString();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-        });
+        } else {
+            Future<Map<String, Integer>> domainResultFuture = executorService.submit(new DomainSummarizer(domainName, webJobsFutures));
+            domainSummaries.put(domainName, domainResultFuture);
 
-        return summaryMap.toString();
+            try {
+                return domainResultFuture.get().toString();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        return "No job under such query exists.";
     }
+
+
+    private String getWebSummary() {
+
+        if (webJobsSummaryCache != null) {
+            try {
+                return webJobsSummaryCache.get().toString();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        webJobsSummaryCache = executorService.submit(new WebCorpusSummarizer(webJobsFutures));
+
+        try {
+            return webJobsSummaryCache.get().toString();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return "Oops, an error happened while processing web summary!";
+        }
+
+    }
+
+
+    public void clearFileSummary() {
+        fileSummaryJobs = null;
+        System.out.println("> Cleared File Summary.");
+    }
+
+
+    public void clearWebSummary() {
+        webJobsSummaryCache = null;
+        System.out.println("> Cleared Web Summary");
+    }
+
 
     public ExecutorService getExecutorService() {
         return executorService;
+    }
+
+
+    public Map<String, Future<Map<String, Integer>>> getFileJobs() {
+        return fileJobs;
     }
 }

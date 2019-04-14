@@ -7,7 +7,7 @@ public class FileJob implements Job {
 
     private ScanType type = ScanType.FILE;
     private String query;
-    private Future<Map> resultMap;
+    private Future<Map<String,Integer>> resultMap;
 
     public FileJob(String corpusName) {
         this.query = corpusName;
@@ -24,12 +24,12 @@ public class FileJob implements Job {
     }
 
     @Override
-    public Future<Map> getResult() {
+    public Future<Map<String,Integer>> getResult() {
         return resultMap;
     }
 
     @Override
-    public void setResult(Future<Map> resultMap) {
+    public void setResult(Future<Map<String,Integer>> resultMap) {
         this.resultMap = resultMap;
     }
 
